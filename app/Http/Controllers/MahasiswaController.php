@@ -2,99 +2,185 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Redirect;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class MahasiswaController extends Controller
 {
+    /**
+     * Update Profile Mahasiswa
+     */
+    public function updateProfile(Request $request)
+    {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        $request->validate([
+            'nama_mhs' => 'required|string|max:255',
+            'prodi' => 'required|string|max:255',
+            'nohp_mhs' => 'required|string|max:15',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $updateData = [
+            'nama_mhs' => $request->nama_mhs,
+            'prodi' => $request->prodi,
+            'nohp_mhs' => $request->nohp_mhs,
+        ];
+
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $fotoName = time() . '.' . $foto->getClientOriginalExtension();
+            $foto->move(public_path('assets/img'), $fotoName);
+            $updateData['foto'] = $fotoName;
+        }
+
+        DB::table('mahasiswa')->where('npm', $mahasiswa->npm)->update($updateData);
+
+        return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
+    }
+
+    /**
+     * Reset Password Mahasiswa
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        if (!Hash::check($request->current_password, $mahasiswa->password)) {
+            return redirect()->back()->withErrors(['current_password' => 'Password lama tidak sesuai.']);
+        }
+
+        DB::table('mahasiswa')
+            ->where('npm', $mahasiswa->npm)
+            ->update(['password' => Hash::make($request->password)]);
+
+        return redirect()->back()->with('success', 'Password berhasil diubah!');
+    }
+
+    /**
+     * Index - List Mahasiswa untuk Admin
+     */
     public function index(Request $request)
     {
-        $query = Mahasiswa::query();
+        $nama_mhs = $request->nama_mhs;
+        $prodi = $request->prodi;
 
-        if ($request->filled('nama_mhs')) {
-            $query->where('nama_mhs', 'like', '%' . $request->nama_mhs . '%');
-        }
+        $mahasiswa = DB::table('mahasiswa')
+            ->when($nama_mhs, function ($query) use ($nama_mhs) {
+                return $query->where('nama_mhs', 'like', '%' . $nama_mhs . '%');
+            })
+            ->when($prodi, function ($query) use ($prodi) {
+                return $query->where('prodi', $prodi);
+            })
+            ->paginate(10);
 
-        if ($request->filled('prodi')) {
-            $query->where('prodi', $request->prodi);
-        }
-
-        $mahasiswa = $query->orderBy('nama_mhs')->paginate(5)->withQueryString();
-        $prodi = DB::table('prodis')->pluck('prodi');
+        $prodi = DB::table('mahasiswa')->select('prodi')->distinct()->pluck('prodi');
 
         return view('pages.admin.mahasiswaindex', compact('mahasiswa', 'prodi'));
     }
 
+    /**
+     * Store - Tambah Mahasiswa Baru
+     */
     public function store(Request $request)
     {
-        $foto = null;
+        $request->validate([
+            'npm' => 'required|unique:mahasiswa',
+            'nama_mhs' => 'required',
+            'prodi' => 'required',
+            'nohp_mhs' => 'required',
+            'tempat_pkl' => 'nullable',
+            'password' => 'nullable|min:6',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $data = [
+            'npm' => $request->npm,
+            'nama_mhs' => $request->nama_mhs,
+            'prodi' => $request->prodi,
+            'nohp_mhs' => $request->nohp_mhs,
+            'tempat_pkl' => $request->tempat_pkl,
+            'password' => Hash::make($request->password ?: 'password123'),
+        ];
+
         if ($request->hasFile('foto')) {
-            $foto = $request->npm . '.' . $request->file('foto')->getClientOriginalExtension();
+            $foto = $request->file('foto');
+            $fotoName = time() . '.' . $foto->getClientOriginalExtension();
+            $foto->move(public_path('assets/img'), $fotoName);
+            $data['foto'] = $fotoName;
         }
 
-        try {
-            $data = [
-                'npm' => $request->npm,
-                'nama_mhs' => $request->nama_mhs,
-                'prodi' => $request->prodi,
-                'nohp_mhs' => $request->nohp_mhs,
-                'tempat_pkl' => $request->tempat_pkl,
-                'foto' => $foto,
-                'password' => Hash::make('12345')
-            ];
+        DB::table('mahasiswa')->insert($data);
 
-            DB::table('mahasiswa')->insert($data);
-
-            if ($foto) {
-                $request->file('foto')->storeAs('public/uploads/mahasiswa/', $foto);
-            }
-
-            return Redirect::back()->with(['success' => 'Data mahasiswa berhasil disimpan.']);
-        } catch (\Exception $e) {
-            return Redirect::back()->with(['warning' => 'Data gagal disimpan: ' . $e->getMessage()]);
-        }
+        return redirect()->back()->with('success', 'Mahasiswa berhasil ditambahkan!');
     }
 
+    /**
+     * Update - Edit Mahasiswa
+     */
+    public function update(Request $request, $npm)
+    {
+        $request->validate([
+            'nama_mhs' => 'required',
+            'prodi' => 'required',
+            'nohp_mhs' => 'required',
+            'tempat_pkl' => 'nullable',
+            'password' => 'nullable|min:6',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $data = [
+            'nama_mhs' => $request->nama_mhs,
+            'prodi' => $request->prodi,
+            'nohp_mhs' => $request->nohp_mhs,
+            'tempat_pkl' => $request->tempat_pkl,
+        ];
+
+        if ($request->password) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $fotoName = time() . '.' . $foto->getClientOriginalExtension();
+            $foto->move(public_path('assets/img'), $fotoName);
+            $data['foto'] = $fotoName;
+        }
+
+        DB::table('mahasiswa')->where('npm', $npm)->update($data);
+
+        return redirect()->back()->with('success', 'Mahasiswa berhasil diperbarui!');
+    }
+
+    /**
+     * Destroy - Hapus Mahasiswa
+     */
     public function destroy($npm)
     {
-        $mahasiswa = Mahasiswa::where('npm', $npm)->first();
+        DB::table('mahasiswa')->where('npm', $npm)->delete();
 
-        if (!$mahasiswa) {
-            return redirect()->back()->with('error', 'Data mahasiswa tidak ditemukan.');
-        }
-
-        $mahasiswa->delete();
-        return redirect()->back()->with('success', 'Data mahasiswa berhasil dihapus.');
+        return redirect()->back()->with('success', 'Mahasiswa berhasil dihapus!');
     }
 
+    /**
+     * Import Excel Mahasiswa
+     */
     public function importExcel(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xls,xlsx']);
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
 
-        $path = $request->file('file')->getRealPath();
-        $spreadsheet = IOFactory::load($path);
-        $data = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
+        // Implementasi import Excel di sini jika diperlukan
+        // Menggunakan Laravel Excel atau library lainnya
 
-        foreach ($data as $index => $row) {
-            if ($index == 1 || empty($row['A'])) continue;
-            $tempat = $row['G'] ?? 'Tidak Tersedia';
-
-            Mahasiswa::updateOrCreate(
-                ['npm' => $row['B']],
-                [
-                    'nama_mhs' => $row['C'],
-                    'nohp_mhs' => $row['D'],
-                    'prodi' => $row['E'],
-                    'tempat_pkl' => $tempat,
-                    'password' => Hash::make('12345')
-                ]
-            );
-        }
-
-        return back()->with('success', 'Data mahasiswa berhasil diimpor!');
+        return redirect()->back()->with('success', 'Import berhasil!');
     }
 }

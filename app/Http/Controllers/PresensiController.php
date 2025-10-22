@@ -253,14 +253,40 @@ class PresensiController extends Controller
         return Excel::download(new PresensiExport($bulan, $tahun, $npm), 'data_presensi.xlsx');
     }
 
-    public function rekapMahasiswa()
+    public function rekapMahasiswa(Request $request)
     {
         $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        $rekap = DB::table('presensi')
-            ->select('npm', DB::raw('COUNT(jam_in) as hadir'))
-            ->groupBy('npm')
-            ->get();
 
-        return view('pages.mahasiswa.rekap', compact('rekap', 'namabulan'));
+        $npm = Auth::guard('mahasiswa')->user()->npm;
+
+        // Query dasar untuk presensi mahasiswa
+        $query = DB::table('presensi')
+            ->where('npm', $npm)
+            ->orderBy('tgl_presensi', 'desc');
+
+        // Filter berdasarkan bulan dan tahun jika ada
+        if ($request->filled('bulan')) {
+            $query->whereMonth('tgl_presensi', $request->bulan);
+        }
+
+        if ($request->filled('tahun')) {
+            $query->whereYear('tgl_presensi', $request->tahun);
+        }
+
+        // Handle export Excel
+        if ($request->has('export') && $request->export == 'excel') {
+            return Excel::download(new PresensiExport($request->bulan, $request->tahun, $npm), 'rekap_presensi_' . $npm . '.xlsx');
+        }
+
+        // Handle print
+        if ($request->has('print')) {
+            $presensi = $query->get();
+            return view('pages.mahasiswa.rekap_print', compact('presensi', 'namabulan', 'request'));
+        }
+
+        // Pagination untuk tampilan normal
+        $presensi = $query->paginate(20);
+
+        return view('pages.mahasiswa.rekap', compact('presensi', 'namabulan'));
     }
 }

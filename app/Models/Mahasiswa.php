@@ -40,6 +40,8 @@ class Mahasiswa extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected $keyType = 'string';
+
     public function getAuthPassword()
     {
         return $this->password; // Pastikan password digunakan untuk login

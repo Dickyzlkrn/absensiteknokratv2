@@ -3,93 +3,29 @@
 @include('layouts.sidebarmhs')
 
 <div class="ms-3 mb-4">
-    <h3 class="mb-0 h4 font-weight-bolder">Dashboard Mahasiswa</h3>
-    <p class="mb-4">
-        Selamat datang, <strong>{{ Auth::guard('mahasiswa')->user()->nama_mhs }}</strong>! <br>
-        Pantau kehadiran dan aktivitas absensi PKL/Magang Anda dengan mudah dan efisien.
+    <h3 class="mb-0 h4 font-weight-bolder">Presensi</h3>
+    <p class="text-muted mb-4">
+        Lakukan absensi masuk dan pulang dengan mudah.
     </p>
 </div>
 
-{{-- Profil Mahasiswa --}}
-<div class="row mb-4">
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body d-flex align-items-center">
-                <img src="{{ asset('storage/uploads/mahasiswa/' . Auth::guard('mahasiswa')->user()->foto) }}"
-                    alt="Foto Mahasiswa" class="rounded-circle me-3"
-                    style="width: 70px; height: 70px; object-fit: cover;">
-                <div>
-                    <h5 class="mb-0">{{ Auth::guard('mahasiswa')->user()->nama_mhs }}</h5>
-                    <p class="text-sm mb-0 text-secondary">Mahasiswa</p>
-                    <form action="{{ route('logoutmahasiswa') }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-link text-danger text-sm p-0 m-0 align-baseline">
-                            <i class="material-symbols-rounded align-middle">logout</i> Logout
-                        </button>
-                    </form>
-                </div>
+{{-- Tombol Presensi --}}
+<div class="row mb-5">
+    <div class="col-12 d-flex justify-content-center gap-4 flex-wrap">
+        <button id="btn-presensi-masuk" class="btn btn-success presensi-btn">
+            <div class="icon bg-success text-white shadow rounded-circle mb-2">
+                <i class="material-symbols-rounded fs-2">login</i>
             </div>
-        </div>
-    </div>
+            <h6 class="mb-0">Absen Masuk</h6>
+            <small class="text-muted">Absen masuk dengan foto</small>
+        </button>
 
-    {{-- Status Hari Ini --}}
-    <div class="col-lg-8 col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body row text-center">
-                <div class="col-6 border-end">
-                    <h6 class="text-secondary mb-1">Masuk</h6>
-                    <h4 class="mb-0">
-                        {{ $presensihariini && $presensihariini->jam_in ? $presensihariini->jam_in : 'Belum Absen' }}
-                    </h4>
-                </div>
-                <div class="col-6">
-                    <h6 class="text-secondary mb-1">Pulang</h6>
-                    <h4 class="mb-0">
-                        {{ $presensihariini && $presensihariini->jam_out ? $presensihariini->jam_out : 'Belum Absen' }}
-                    </h4>
-                </div>
+        <button id="btn-presensi-pulang" class="btn btn-danger presensi-btn">
+            <div class="icon bg-danger text-white shadow rounded-circle mb-2">
+                <i class="material-symbols-rounded fs-2">logout</i>
             </div>
-        </div>
-    </div>
-</div>
-
-{{-- Menu Aksi Mahasiswa --}}
-<div class="row mb-4">
-    <div class="col-lg-4 col-md-6 mb-3">
-        <a href="{{ route('mahasiswa.izin') }}" class="text-decoration-none">
-            <div class="card h-100 hover-shadow-sm text-center p-3">
-                <div class="icon icon-shape bg-gradient-dark text-white shadow border-radius-lg mb-3"
-                     style="width: 60px; height: 60px; margin: 0 auto;">
-                    <i class="material-symbols-rounded opacity-10 fs-3">calendar_month</i>
-                </div>
-                <h6 class="mb-0">Izin</h6>
-                <p class="text-xs text-secondary mb-0">Ajukan izin tidak hadir</p>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-lg-4 col-md-6 mb-3">
-        <a href="{{ route('mahasiswa.histori') }}" class="text-decoration-none">
-            <div class="card h-100 hover-shadow-sm text-center p-3">
-                <div class="icon icon-shape bg-gradient-dark text-white shadow border-radius-lg mb-3"
-                     style="width: 60px; height: 60px; margin: 0 auto;">
-                    <i class="material-symbols-rounded opacity-10 fs-3">history</i>
-                </div>
-                <h6 class="mb-0">Histori</h6>
-                <p class="text-xs text-secondary mb-0">Lihat riwayat absensi</p>
-            </div>
-        </a>
-    </div>
-
-    {{-- Tombol Presensi Cepat --}}
-    <div class="col-lg-4 col-md-6 mb-3 text-center">
-        <button id="btn-presensi-cepat" class="btn btn-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
-            <div class="icon icon-shape bg-gradient-danger text-white shadow border-radius-lg mb-3"
-                 style="width: 60px; height: 60px; margin: 0 auto;">
-                <i class="material-symbols-rounded opacity-10 fs-3">fingerprint</i>
-            </div>
-            <h6 class="mb-0">Presensi Cepat</h6>
-            <p class="text-xs text-secondary mb-0">Langsung absen masuk/pulang</p>
+            <h6 class="mb-0">Absen Pulang</h6>
+            <small class="text-muted">Absen pulang dengan deskripsi</small>
         </button>
     </div>
 </div>
@@ -97,73 +33,130 @@
 {{-- Input Kamera Tersembunyi --}}
 <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none">
 
-{{-- Rekap Bulanan --}}
-@php
-    $totalHari = now()->daysInMonth;
-    $hadir = $rekapizin->hadir ?? 0;
-    $izin = $rekapizin->jmlizin ?? 0;
-    $sakit = $rekapizin->jmlsakit ?? 0;
-@endphp
-<div class="row mb-4">
-    <div class="col-xl-4 col-sm-6 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="material-symbols-rounded text-success fs-2">check_circle</i>
-                <h6 class="mt-2 mb-0">Hadir</h6>
-                <h5 class="font-weight-bold mb-0">{{ $hadir }} Hari</h5>
+{{-- Tabel Absensi Hari Ini --}}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Absensi Hari Ini</h6>
             </div>
-        </div>
-    </div>
-    <div class="col-xl-4 col-sm-6 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="material-symbols-rounded text-warning fs-2">event_busy</i>
-                <h6 class="mt-2 mb-0">Izin</h6>
-                <h5 class="font-weight-bold mb-0">{{ $izin }} Hari</h5>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-4 col-sm-6 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="material-symbols-rounded text-danger fs-2">medical_information</i>
-                <h6 class="mt-2 mb-0">Sakit</h6>
-                <h5 class="font-weight-bold mb-0">{{ $sakit }} Hari</h5>
+            <div class="card-body table-responsive">
+                @if($presensihariini)
+                <table class="table table-hover align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Jam Masuk</th>
+                            <th>Foto Masuk</th>
+                            <th>Jam Keluar</th>
+                            <th>Foto Keluar</th>
+                            <th>Catatan Harian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ $presensihariini->jam_in ?? '-' }}</td>
+                            <td>
+                                @if($presensihariini->foto_in)
+                                    <img src="{{ asset('storage/uploads/presensi/' . $presensihariini->foto_in) }}"
+                                         alt="Foto Masuk"
+                                         class="img-thumbnail"
+                                         style="width: 80px; height: 60px; object-fit: cover; cursor: pointer;"
+                                         onclick="showImageModal('{{ asset('storage/uploads/presensi/' . $presensihariini->foto_in) }}', 'Foto Absen Masuk')">
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>{{ $presensihariini->jam_out ?? '-' }}</td>
+                            <td>
+                                @if($presensihariini->foto_out)
+                                    <img src="{{ asset('storage/uploads/presensi/' . $presensihariini->foto_out) }}"
+                                         alt="Foto Keluar"
+                                         class="img-thumbnail"
+                                         style="width: 80px; height: 60px; object-fit: cover; cursor: pointer;"
+                                         onclick="showImageModal('{{ asset('storage/uploads/presensi/' . $presensihariini->foto_out) }}', 'Foto Absen Keluar')">
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>{{ $presensihariini->catat_harian ?? '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                @else
+                <p class="text-center text-muted">Belum ada absensi hari ini.</p>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
-{{-- Grafik Kehadiran Bulanan --}}
-<div class="card mt-4">
-    <div class="card-body">
-        <h6 class="mb-2">Grafik Kehadiran Bulan Ini</h6>
-        <canvas id="chart-hadir" class="chart-canvas" height="130"></canvas>
+{{-- Modal untuk menampilkan gambar --}}
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Foto Absensi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Foto Absensi" class="img-fluid rounded">
+            </div>
+        </div>
     </div>
 </div>
 
-{{-- Script Chart & Presensi Cepat --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{-- Style tambahan --}}
+<style>
+.presensi-btn {
+    width: 180px;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.presensi-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+.presensi-btn .icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.notification {
+    animation: slideIn 0.3s ease forwards, slideOut 0.3s ease 4.7s forwards;
+}
+@keyframes slideIn {
+    from {opacity:0; transform: translateX(100%);}
+    to {opacity:1; transform: translateX(0);}
+}
+@keyframes slideOut {
+    from {opacity:1; transform: translateX(0);}
+    to {opacity:0; transform: translateX(100%);}
+}
+</style>
+
+{{-- Script Presensi --}}
 <script>
-const ctx = document.getElementById('chart-hadir').getContext('2d');
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ['Hadir', 'Izin', 'Sakit'],
-        datasets: [{
-            label: 'Jumlah Hari',
-            data: [{{ $hadir }}, {{ $izin }}, {{ $sakit }}],
-            backgroundColor: ['#4CAF50', '#FFC107', '#F44336']
-        }]
-    },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
-});
-
-// Presensi Cepat
-const btnPresensi = document.getElementById('btn-presensi-cepat');
+// Presensi Masuk dan Pulang
+const btnPresensiMasuk = document.getElementById('btn-presensi-masuk');
+const btnPresensiPulang = document.getElementById('btn-presensi-pulang');
 const cameraInput = document.getElementById('cameraInput');
 
-btnPresensi.addEventListener('click', () => cameraInput.click());
+let isPulang = false;
+
+btnPresensiMasuk.addEventListener('click', () => {
+    isPulang = false;
+    cameraInput.click();
+});
+
+btnPresensiPulang.addEventListener('click', () => {
+    isPulang = true;
+    cameraInput.click();
+});
 
 cameraInput.addEventListener('change', () => {
     const file = cameraInput.files[0];
@@ -171,29 +164,32 @@ cameraInput.addEventListener('change', () => {
     const reader = new FileReader();
     reader.onload = function(e) {
         const base64Image = e.target.result;
+        let catat_harian = '';
+        if (isPulang) {
+            catat_harian = prompt('Masukkan deskripsi aktivitas hari ini:');
+            if (catat_harian === null) return; // Cancelled
+        }
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
-                kirimPresensi(base64Image, pos.coords.latitude, pos.coords.longitude);
-            }, () => kirimPresensi(base64Image, '', ''));
+                kirimPresensi(base64Image, pos.coords.latitude, pos.coords.longitude, catat_harian);
+            }, () => kirimPresensi(base64Image, '', '', catat_harian));
         } else {
-            kirimPresensi(base64Image, '', '');
+            kirimPresensi(base64Image, '', '', catat_harian);
         }
     };
     reader.readAsDataURL(file);
 });
 
-function kirimPresensi(image, lat, long) {
+function kirimPresensi(image, lat, long, catat_harian) {
     fetch("{{ route('mahasiswa.storepresensi') }}", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
-        body: JSON.stringify({ image: image, lokasi: lat && long ? lat+','+long : '', catat_harian: '' })
+        body: JSON.stringify({ image: image, lokasi: lat && long ? lat+','+long : '', catat_harian: catat_harian })
     })
     .then(res => res.json())
     .then(res => {
         if(res.status === 'success'){
-            // Show success notification
             showNotification(res.message, 'success');
-            // Reload page after 2 seconds
             setTimeout(() => {
                 location.reload();
             }, 2000);
@@ -208,29 +204,31 @@ function kirimPresensi(image, lat, long) {
 }
 
 function showNotification(message, type) {
-    // Remove existing notifications
     const existingNotifications = document.querySelectorAll('.notification');
     existingNotifications.forEach(notification => notification.remove());
 
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
     notification.innerHTML = `
-        <div class="flex items-center">
-            <i class="material-symbols-rounded mr-2">${type === 'success' ? 'check_circle' : 'error'}</i>
+        <div class="flex items-center gap-2">
+            <i class="material-symbols-rounded">${type === 'success' ? 'check_circle' : 'error'}</i>
             <span>${message}</span>
         </div>
     `;
 
-    // Add to page
     document.body.appendChild(notification);
 
-    // Auto remove after 3 seconds
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 3000);
+        notification.remove();
+    }, 5000);
+}
+
+// Fungsi untuk menampilkan modal gambar
+function showImageModal(imageSrc, title) {
+    document.getElementById('imageModalLabel').textContent = title;
+    document.getElementById('modalImage').src = imageSrc;
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
 }
 </script>
 @endsection

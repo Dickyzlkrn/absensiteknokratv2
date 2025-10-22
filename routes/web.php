@@ -68,13 +68,16 @@ Route::prefix('mahasiswa')->middleware('auth:mahasiswa')->group(function () {
     // Akun ✅
     Route::view('/akun', 'pages.mahasiswa.akun')->name('mahasiswa.akun');
 
+    // Update Profile & Password
+    Route::post('/updateprofile', [MahasiswaController::class, 'updateProfile'])->name('mahasiswa.updateprofile');
+    Route::post('/resetpassword', [MahasiswaController::class, 'resetPassword'])->name('mahasiswa.resetpassword');
+
     // Logout Mahasiswa
     Route::post('/logout', [AuthController::class, 'proseslogout'])->name('logoutmahasiswa');
 
     // Route untuk Presensi Cepat AJAX
     Route::post('/mahasiswa/presensi/store', [\App\Http\Controllers\PresensiController::class, 'store'])
-        ->name('mahasiswa.storepresensi')
-        ->middleware('auth:mahasiswa');
+        ->name('mahasiswa.storepresensi');
 });
 
 // ===================================================
@@ -88,6 +91,7 @@ Route::prefix('admin')->middleware('auth:web')->group(function () {
     // Daftar Mahasiswa
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('admin.mahasiswa.index');
     Route::post('/mahasiswa', [MahasiswaController::class, 'store'])->name('admin.mahasiswa.store');
+    Route::put('/mahasiswa/{npm}', [MahasiswaController::class, 'update'])->name('admin.mahasiswa.update');
     Route::delete('/mahasiswa/{npm}', [MahasiswaController::class, 'destroy'])->name('admin.mahasiswa.destroy');
     Route::post('/mahasiswa/import', [MahasiswaController::class, 'importExcel'])->name('admin.mahasiswa.import');
 

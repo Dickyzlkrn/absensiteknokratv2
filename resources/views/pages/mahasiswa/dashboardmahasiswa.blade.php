@@ -16,10 +16,17 @@
     <div class="col-lg-4 col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-body d-flex align-items-center">
-                <img src="{{ asset('storage/uploads/mahasiswa/' . Auth::guard('mahasiswa')->user()->foto) }}"
-                    alt="Foto Mahasiswa"
-                    class="rounded-circle me-3"
-                    style="width: 70px; height: 70px; object-fit: cover;">
+                @if(Auth::guard('mahasiswa')->user()->foto)
+                    <img src="{{ asset('assets/img/' . Auth::guard('mahasiswa')->user()->foto) }}"
+                        alt="Foto Mahasiswa"
+                        class="rounded-circle me-3"
+                        style="width: 70px; height: 70px; object-fit: cover;">
+                @else
+                    <div class="rounded-circle me-3 d-flex align-items-center justify-content-center bg-light"
+                        style="width: 70px; height: 70px;">
+                        <i class="fas fa-user text-secondary"></i>
+                    </div>
+                @endif
                 <div>
                     <h5 class="mb-0">{{ Auth::guard('mahasiswa')->user()->nama_mhs }}</h5>
                     <p class="text-sm mb-0 text-secondary">Mahasiswa</p>

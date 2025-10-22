@@ -11,9 +11,13 @@ class mpMahasiswaController extends Controller
     {
         $prodiId = $request->input('prodi_id');
         $periodeId = $request->input('periode_id');
+        $mahasiswaId = $request->input('mahasiswa_id');
+        $tempatMagang = $request->input('tempat_magang');
 
         $allProdi = DB::table('prodis')->get();
         $allPeriode = DB::table('periode')->get();
+        $allMahasiswa = DB::table('mahasiswa')->select('npm', 'nama_mhs')->get();
+        $allTempatMagang = DB::table('mahasiswa')->select('tempat_pkl')->distinct()->whereNotNull('tempat_pkl')->get();
 
         $tanggalMulai = null;
         $tanggalSelesai = null;
@@ -54,6 +58,14 @@ class mpMahasiswaController extends Controller
             $query->where('mahasiswa.prodi', $prodiId);
         }
 
+        if ($mahasiswaId) {
+            $query->where('mahasiswa.npm', $mahasiswaId);
+        }
+
+        if ($tempatMagang) {
+            $query->where('mahasiswa.tempat_pkl', $tempatMagang);
+        }
+
         // PAGINATE: 10 data per halaman
         $mahasiswa = $query->paginate(10)->withQueryString();
 
@@ -61,8 +73,12 @@ class mpMahasiswaController extends Controller
             'mahasiswa' => $mahasiswa,
             'allProdi' => $allProdi,
             'allPeriode' => $allPeriode,
+            'allMahasiswa' => $allMahasiswa,
+            'allTempatMagang' => $allTempatMagang,
             'selectedProdiId' => $prodiId,
             'selectedPeriodeId' => $periodeId,
+            'selectedMahasiswaId' => $mahasiswaId,
+            'selectedTempatMagang' => $tempatMagang,
         ]);
     }
 }

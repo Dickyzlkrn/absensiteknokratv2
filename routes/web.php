@@ -56,6 +56,9 @@ Route::prefix('mahasiswa')->middleware('auth:mahasiswa')->group(function () {
     // Rekap Presensi
     Route::get('/rekap', [PresensiController::class, 'rekapMahasiswa'])->name('mahasiswa.rekap');
 
+    // Cetak Laporan
+    Route::post('/cetaklaporan', [PresensiController::class, 'cetaklaporan'])->name('mahasiswa.cetaklaporan');
+
     // Izin Mahasiswa ✅
     Route::view('/izin', 'pages.mahasiswa.izin')->name('mahasiswa.izin');
 
@@ -98,6 +101,8 @@ Route::prefix('admin')->middleware('auth:web')->group(function () {
     // Presensi
     Route::get('/presensi/laporan', [PresensiController::class, 'laporan'])->name('admin.presensi.laporan');
     Route::get('/presensi/rekap', [PresensiController::class, 'rekap'])->name('admin.presensi.rekap');
+    Route::post('/presensi/cetakrekap', [PresensiController::class, 'cetakrekap'])->name('admin.presensi.cetakrekap');
+    Route::post('/presensi/cetaklaporan', [PresensiController::class, 'cetaklaporan'])->name('admin.presensi.cetaklaporan');
 
     // Periode PKL
     Route::get('/periodepkl', [PeriodeController::class, 'index'])->name('admin.periodepkl');

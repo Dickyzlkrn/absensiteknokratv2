@@ -16,7 +16,7 @@
     <div class="card shadow-sm mb-4 border-0">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.mpmahasiswa') }}" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label fw-semibold">Filter Prodi</label>
                     <select name="prodi_id" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Semua Prodi --</option>
@@ -28,7 +28,31 @@
                     </select>
                 </div>
 
-                <div class="col-md-8">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Filter Mahasiswa</label>
+                    <select name="mahasiswa_id" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Semua Mahasiswa --</option>
+                        @foreach($allMahasiswa as $mhs)
+                            <option value="{{ $mhs->npm }}" {{ $selectedMahasiswaId == $mhs->npm ? 'selected' : '' }}>
+                                {{ $mhs->nama_mhs }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Filter Tempat Magang</label>
+                    <select name="tempat_magang" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Semua Tempat Magang --</option>
+                        @foreach($allTempatMagang as $tempat)
+                            <option value="{{ $tempat->tempat_pkl }}" {{ $selectedTempatMagang == $tempat->tempat_pkl ? 'selected' : '' }}>
+                                {{ $tempat->tempat_pkl }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
                     <label class="form-label fw-semibold">Filter Periode PKL</label>
                     <select name="periode_id" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Semua Periode --</option>

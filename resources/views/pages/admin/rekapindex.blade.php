@@ -12,10 +12,130 @@
             </div>
         </div>
 
+        {{-- Dashboard Cards --}}
+        <div class="row mb-4">
+            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="numbers">
+                                    <p class="text-sm mb-0 text-capitalize font-weight-bold">Total Mahasiswa</p>
+                                    <h5 class="font-weight-bolder mb-0">{{ $totalMahasiswa }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                                    <i class="material-symbols-rounded opacity-10" aria-hidden="true">school</i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="numbers">
+                                    <p class="text-sm mb-0 text-capitalize font-weight-bold">Total Presensi Bulan Ini</p>
+                                    <h5 class="font-weight-bolder mb-0">{{ $totalPresensi }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                    <i class="material-symbols-rounded opacity-10" aria-hidden="true">check_circle</i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="numbers">
+                                    <p class="text-sm mb-0 text-capitalize font-weight-bold">Rata-rata Kehadiran</p>
+                                    <h5 class="font-weight-bolder mb-0">{{ $avgAttendanceRate }}%</h5>
+                                </div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md">
+                                    <i class="material-symbols-rounded opacity-10" aria-hidden="true">trending_up</i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="numbers">
+                                    <p class="text-sm mb-0 text-capitalize font-weight-bold">Bulan Aktif</p>
+                                    <h5 class="font-weight-bolder mb-0">{{ date('F Y') }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
+                                    <i class="material-symbols-rounded opacity-10" aria-hidden="true">calendar_today</i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Charts Row --}}
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-lg-0 mb-4">
+                <div class="card z-index-2">
+                    <div class="card-header pb-0">
+                        <h6>Trend Presensi 6 Bulan Terakhir</h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="chart">
+                            <canvas id="monthlyChart" class="chart-canvas" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h6>Mahasiswa Teraktif Bulan Ini</h6>
+                    </div>
+                    <div class="card-body p-3">
+                        @if($topStudents->count() > 0)
+                            @foreach($topStudents as $student)
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="text-center me-3">
+                                        <i class="material-symbols-rounded text-success">person</i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 text-sm">{{ $student->nama_mhs }}</h6>
+                                        <p class="text-xs text-muted mb-0">{{ $student->total_presensi }} kali presensi</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <p class="text-sm text-muted">Belum ada data presensi bulan ini</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Form Filter Rekap --}}
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body">
-                <form action="/presensi/cetakrekap" method="POST" target="_blank" class="row g-3 align-items-end">
+                <form action="{{ route('admin.presensi.cetakrekap') }}" method="POST" target="_blank" class="row g-3 align-items-end">
                     @csrf
                     <div class="col-md-6">
                         <label for="bulan" class="form-label fw-semibold">Bulan</label>
@@ -89,4 +209,46 @@
             font-weight: 500 !important;
         }
     </style>
+
+    {{-- Chart.js Script --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Monthly Trend Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            const monthlyData = @json($monthlyData);
+
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.map(item => item.month),
+                    datasets: [{
+                        label: 'Total Presensi',
+                        data: monthlyData.map(item => item.count),
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 @endsection

@@ -326,4 +326,243 @@ class PresensiController extends Controller
 
         return view('pages.mahasiswa.rekap', compact('presensi', 'namabulan'));
     }
+
+    // ===================== CETAK REKAP =====================
+    public function cetakrekap(Request $request)
+    {
+        $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        $bulan = $request->bulan;
+        $tahun = $request->tahun;
+
+        $query = DB::table('presensi')
+            ->join('mahasiswa', 'presensi.npm', '=', 'mahasiswa.npm')
+            ->select('presensi.*', 'mahasiswa.nama_mhs', 'mahasiswa.prodi')
+            ->orderBy('presensi.tgl_presensi', 'desc');
+
+        if ($bulan) {
+            $query->whereMonth('presensi.tgl_presensi', $bulan);
+        }
+
+        if ($tahun) {
+            $query->whereYear('presensi.tgl_presensi', $tahun);
+        }
+
+        $presensi = $query->get();
+
+        // Handle export Excel
+        if ($request->has('exportexcel')) {
+            return Excel::download(new PresensiExport($bulan, $tahun), 'rekap_presensi_' . ($bulan ? $namabulan[$bulan] : 'semua') . '_' . ($tahun ?: date('Y')) . '.xlsx');
+        }
+
+        return view('pages.admin.cetakrekap', compact('presensi', 'namabulan', 'bulan', 'tahun'));
+    }
+
+    // ===================== CETAK LAPORAN =====================
+    public function cetaklaporan(Request $request)
+    {
+        $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        $bulan = $request->bulan;
+        $tahun = $request->tahun;
+        $npm = $request->npm;
+
+        $query = DB::table('presensi')
+            ->join('mahasiswa', 'presensi.npm', '=', 'mahasiswa.npm')
+            ->select('presensi.*', 'mahasiswa.nama_mhs', 'mahasiswa.prodi')
+            ->orderBy('presensi.tgl_presensi', 'desc');
+
+        if ($npm) {
+            $query->where('presensi.npm', $npm);
+        }
+
+        if ($bulan) {
+            $query->whereMonth('presensi.tgl_presensi', $bulan);
+        }
+
+        if ($tahun) {
+            $query->whereYear('presensi.tgl_presensi', $tahun);
+        }
+
+        $presensi = $query->get();
+
+        // Handle export Excel
+        if ($request->has('exportexcel')) {
+            return Excel::download(new PresensiExport($bulan, $tahun, $npm), 'laporan_presensi_' . ($npm ?: 'semua') . '_' . ($bulan ? $namabulan[$bulan] : 'semua') . '_' . ($tahun ?: date('Y')) . '.xlsx');
+        }
+
+        return view('pages.admin.cetaklaporan', compact('presensi', 'namabulan', 'bulan', 'tahun', 'npm'));
+    }
+
+    // ===================== REKAP FORM =====================
+    public function rekap()
+    {
+        $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        // Get current month and year
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+
+        // Total students
+        $totalMahasiswa = DB::table('mahasiswa')->count();
+
+        // Total attendance records for current month
+        $totalPresensi = DB::table('presensi')
+            ->whereMonth('tgl_presensi', $currentMonth)
+            ->whereYear('tgl_presensi', $currentYear)
+            ->count();
+
+        // Average attendance rate
+        $totalWorkingDays = cal_days_in_month(CAL_GREGORIAN, $currentMonth, $currentYear);
+        $avgAttendanceRate = $totalMahasiswa > 0 ? round(($totalPresensi / ($totalMahasiswa * $totalWorkingDays)) * 100, 1) : 0;
+
+        // Monthly attendance trend (last 6 months)
+        $monthlyData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = date('m', strtotime("-$i months"));
+            $year = date('Y', strtotime("-$i months"));
+            $count = DB::table('presensi')
+                ->whereMonth('tgl_presensi', $month)
+                ->whereYear('tgl_presensi', $year)
+                ->count();
+            $monthlyData[] = [
+                'month' => $namabulan[(int)$month],
+                'count' => $count
+            ];
+        }
+
+        // Top 5 most active students this month
+        $topStudents = DB::table('presensi')
+            ->join('mahasiswa', 'presensi.npm', '=', 'mahasiswa.npm')
+            ->select('mahasiswa.nama_mhs', DB::raw('COUNT(*) as total_presensi'))
+            ->whereMonth('presensi.tgl_presensi', $currentMonth)
+            ->whereYear('presensi.tgl_presensi', $currentYear)
+            ->groupBy('presensi.npm', 'mahasiswa.nama_mhs')
+            ->orderBy('total_presensi', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('pages.admin.rekapindex', compact(
+            'namabulan',
+            'totalMahasiswa',
+            'totalPresensi',
+            'avgAttendanceRate',
+            'monthlyData',
+            'topStudents'
+        ));
+    }
+
+    // ===================== LAPORAN FORM =====================
+    public function laporan(Request $request)
+    {
+        $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        $mahasiswa = DB::table('mahasiswa')->get();
+
+        // Get filter parameters
+        $bulan = $request->input('bulan', date('m'));
+        $tahun = $request->input('tahun', date('Y'));
+        $prodi = $request->input('prodi');
+        $npm = $request->input('npm');
+
+        // Base query for presensi
+        $presensiQuery = DB::table('presensi')
+            ->join('mahasiswa', 'presensi.npm', '=', 'mahasiswa.npm')
+            ->whereMonth('presensi.tgl_presensi', $bulan)
+            ->whereYear('presensi.tgl_presensi', $tahun);
+
+        // Apply filters
+        if ($prodi) {
+            $presensiQuery->where('mahasiswa.prodi', $prodi);
+        }
+        if ($npm) {
+            $presensiQuery->where('presensi.npm', $npm);
+        }
+
+        // Total attendance records
+        $totalPresensi = $presensiQuery->count();
+
+        // Total izin records
+        $izinQuery = DB::table('pengajuan_izin')
+            ->join('mahasiswa', 'pengajuan_izin.npm', '=', 'mahasiswa.npm')
+            ->whereMonth('pengajuan_izin.tgl_izin', $bulan)
+            ->whereYear('pengajuan_izin.tgl_izin', $tahun);
+
+        if ($prodi) {
+            $izinQuery->where('mahasiswa.prodi', $prodi);
+        }
+        if ($npm) {
+            $izinQuery->where('pengajuan_izin.npm', $npm);
+        }
+
+        $totalIzin = $izinQuery->count();
+
+        // Attendance by program study
+        $attendanceByProdi = $presensiQuery
+            ->select('mahasiswa.prodi', DB::raw('COUNT(*) as total'))
+            ->groupBy('mahasiswa.prodi')
+            ->orderBy('total', 'desc')
+            ->get();
+
+        // Daily attendance trend
+        $dailyData = [];
+        $totalDays = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+        for ($day = 1; $day <= $totalDays; $day++) {
+            $date = sprintf('%04d-%02d-%02d', $tahun, $bulan, $day);
+            $count = DB::table('presensi')
+                ->join('mahasiswa', 'presensi.npm', '=', 'mahasiswa.npm')
+                ->where('presensi.tgl_presensi', $date);
+
+            if ($prodi) {
+                $count->where('mahasiswa.prodi', $prodi);
+            }
+            if ($npm) {
+                $count->where('presensi.npm', $npm);
+            }
+
+            $count = $count->count();
+            $dailyData[] = [
+                'day' => $day,
+                'count' => $count
+            ];
+        }
+
+        // Students with perfect attendance
+        $mahasiswaQuery = DB::table('mahasiswa');
+        if ($prodi) {
+            $mahasiswaQuery->where('prodi', $prodi);
+        }
+        if ($npm) {
+            $mahasiswaQuery->where('npm', $npm);
+        }
+
+        $perfectAttendance = $mahasiswaQuery
+            ->leftJoin('presensi', function($join) use ($bulan, $tahun) {
+                $join->on('mahasiswa.npm', '=', 'presensi.npm')
+                     ->whereMonth('presensi.tgl_presensi', $bulan)
+                     ->whereYear('presensi.tgl_presensi', $tahun);
+            })
+            ->select('mahasiswa.nama_mhs', 'mahasiswa.prodi', DB::raw('COUNT(presensi.id) as attendance_count'))
+            ->groupBy('mahasiswa.npm', 'mahasiswa.nama_mhs', 'mahasiswa.prodi')
+            ->having('attendance_count', '>=', $totalDays)
+            ->orderBy('mahasiswa.nama_mhs')
+            ->get();
+
+        // Get unique prodi for filter
+        $prodiList = DB::table('mahasiswa')->select('prodi')->distinct()->orderBy('prodi')->get();
+
+        return view('pages.admin.laporanindex', compact(
+            'namabulan',
+            'mahasiswa',
+            'totalPresensi',
+            'totalIzin',
+            'attendanceByProdi',
+            'dailyData',
+            'perfectAttendance',
+            'prodiList',
+            'bulan',
+            'tahun',
+            'prodi',
+            'npm'
+        ));
+    }
 }

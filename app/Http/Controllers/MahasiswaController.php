@@ -164,6 +164,13 @@ class MahasiswaController extends Controller
      */
     public function destroy($npm)
     {
+        // Hapus data presensi terkait terlebih dahulu
+        DB::table('presensi')->where('npm', $npm)->delete();
+
+        // Hapus data pengajuan izin terkait
+        DB::table('pengajuan_izin')->where('npm', $npm)->delete();
+
+        // Hapus data mahasiswa
         DB::table('mahasiswa')->where('npm', $npm)->delete();
 
         return redirect()->back()->with('success', 'Mahasiswa berhasil dihapus!');

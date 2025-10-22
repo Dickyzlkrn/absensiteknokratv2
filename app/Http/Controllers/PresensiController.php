@@ -60,12 +60,14 @@ class PresensiController extends Controller
         $lokasi = $request->lokasi;
         $catat_harian = $request->catat_harian;
         $image = $request->image;
+        $type = $request->type; // 'in' for masuk, 'out' for pulang
 
         if (!$image) {
             return response()->json(['status' => 'error', 'message' => 'Foto tidak boleh kosong']);
         }
 
-        $fileName = $npm . "-" . $tgl_presensi . ".png";
+        // Generate different filenames for masuk and pulang
+        $fileName = $npm . "-" . $tgl_presensi . "-" . ($type === 'out' ? 'out' : 'in') . ".png";
 
         try {
             $image_parts = explode(";base64,", $image);
@@ -77,34 +79,69 @@ class PresensiController extends Controller
 
         $presensi = DB::table('presensi')->where('npm', $npm)->where('tgl_presensi', $tgl_presensi)->first();
 
-        if ($presensi) {
-            // Update jam pulang
-            $update = DB::table('presensi')->where('id', $presensi->id)->update([
-                'jam_out' => $jam,
-                'foto_out' => $fileName,
-                'lokasi_out' => $lokasi,
-                'catat_harian' => $catat_harian
-            ]);
+        if ($type === 'out') {
+            // Absen pulang
+            if (!$presensi) {
+                return response()->json(['status' => 'error', 'message' => 'Belum absen masuk hari ini']);
+            }
 
-            if ($update) {
-                return response()->json(['status' => 'success', 'message' => 'Terimakasih, Hati-Hati di Jalan', 'type' => 'out']);
+            if ($presensi->jam_out) {
+                // Re-upload foto keluar tanpa mengubah jam
+                $update = DB::table('presensi')->where('id', $presensi->id)->update([
+                    'foto_out' => $fileName,
+                    'lokasi_out' => $lokasi,
+                    'catat_harian' => $catat_harian
+                ]);
+
+                if ($update) {
+                    return response()->json(['status' => 'success', 'message' => 'Foto absen pulang berhasil diupdate', 'type' => 'out']);
+                } else {
+                    return response()->json(['status' => 'error', 'message' => 'Gagal update foto pulang']);
+                }
             } else {
-                return response()->json(['status' => 'error', 'message' => 'Gagal absen pulang']);
+                // Absen pulang pertama kali
+                $update = DB::table('presensi')->where('id', $presensi->id)->update([
+                    'jam_out' => $jam,
+                    'foto_out' => $fileName,
+                    'lokasi_out' => $lokasi,
+                    'catat_harian' => $catat_harian
+                ]);
+
+                if ($update) {
+                    return response()->json(['status' => 'success', 'message' => 'Terimakasih, Hati-Hati di Jalan', 'type' => 'out']);
+                } else {
+                    return response()->json(['status' => 'error', 'message' => 'Gagal absen pulang']);
+                }
             }
         } else {
-            // Insert jam masuk
-            $insert = DB::table('presensi')->insert([
-                'npm' => $npm,
-                'tgl_presensi' => $tgl_presensi,
-                'jam_in' => $jam,
-                'foto_in' => $fileName,
-                'lokasi_in' => $lokasi
-            ]);
+            // Absen masuk
+            if ($presensi) {
+                // Update foto_in if record exists (allow re-upload)
+                $update = DB::table('presensi')->where('id', $presensi->id)->update([
+                    'foto_in' => $fileName,
+                    'lokasi_in' => $lokasi
+                ]);
 
-            if ($insert) {
-                return response()->json(['status' => 'success', 'message' => 'Selamat Beraktivitas', 'type' => 'in']);
+                if ($update) {
+                    return response()->json(['status' => 'success', 'message' => 'Foto absen masuk berhasil diupdate', 'type' => 'in']);
+                } else {
+                    return response()->json(['status' => 'error', 'message' => 'Gagal update foto masuk']);
+                }
             } else {
-                return response()->json(['status' => 'error', 'message' => 'Gagal absen masuk']);
+                // Insert new record
+                $insert = DB::table('presensi')->insert([
+                    'npm' => $npm,
+                    'tgl_presensi' => $tgl_presensi,
+                    'jam_in' => $jam,
+                    'foto_in' => $fileName,
+                    'lokasi_in' => $lokasi
+                ]);
+
+                if ($insert) {
+                    return response()->json(['status' => 'success', 'message' => 'Selamat Beraktivitas', 'type' => 'in']);
+                } else {
+                    return response()->json(['status' => 'error', 'message' => 'Gagal absen masuk']);
+                }
             }
         }
     }

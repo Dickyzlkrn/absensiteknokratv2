@@ -193,59 +193,60 @@
         cameraInput.click();
     });
 
-    cameraInput.addEventListener('change', () => {
-        const file = cameraInput.files[0];
-        if (!file) return;
+cameraInput.addEventListener('change', () => {
+    const file = cameraInput.files[0];
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const base64Image = e.target.result;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Image = e.target.result;
 
-            // Ambil lokasi (opsional)
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    kirimPresensi(base64Image, position.coords.latitude, position.coords.longitude);
-                }, function() {
-                    kirimPresensi(base64Image, '', '');
-                });
-            } else {
-                kirimPresensi(base64Image, '', '');
-            }
-        };
-        reader.readAsDataURL(file);
+        // Ambil lokasi (opsional)
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                kirimPresensi(base64Image, position.coords.latitude, position.coords.longitude, 'in');
+            }, function() {
+                kirimPresensi(base64Image, '', '', 'in');
+            });
+        } else {
+            kirimPresensi(base64Image, '', '', 'in');
+        }
+    };
+    reader.readAsDataURL(file);
+});
+
+function kirimPresensi(image, lat, long, type) {
+    fetch("{{ route('mahasiswa.storepresensi') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            image: image,
+            lokasi: lat && long ? lat + ',' + long : '',
+            catat_harian: '',
+            type: type
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.status === 'success'){
+            // Show success notification
+            showNotification(res.message, 'success');
+            // Reload page after 2 seconds
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showNotification(res.message, 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showNotification('Terjadi kesalahan saat mengirim data', 'error');
     });
-
-    function kirimPresensi(image, lat, long) {
-        fetch("{{ route('mahasiswa.storepresensi') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({
-                image: image,
-                lokasi: lat && long ? lat + ',' + long : '',
-                catat_harian: ''
-            })
-        })
-        .then(res => res.json())
-        .then(res => {
-            if(res.status === 'success'){
-                // Show success notification
-                showNotification(res.message, 'success');
-                // Reload page after 2 seconds
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            } else {
-                showNotification(res.message, 'error');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            showNotification('Terjadi kesalahan saat mengirim data', 'error');
-        });
-    }
+}
 
     function showNotification(message, type) {
         // Remove existing notifications

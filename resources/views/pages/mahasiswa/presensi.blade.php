@@ -57,11 +57,11 @@
                             <td>{{ $presensihariini->jam_in ?? '-' }}</td>
                             <td>
                                 @if($presensihariini->foto_in)
-                                    <img src="{{ asset('storage/uploads/presensi/' . $presensihariini->foto_in) }}"
+                                    <img src="{{ Storage::url('uploads/presensi/' . $presensihariini->foto_in) }}"
                                          alt="Foto Masuk"
                                          class="img-thumbnail"
                                          style="width: 80px; height: 60px; object-fit: cover; cursor: pointer;"
-                                         onclick="showImageModal('{{ asset('storage/uploads/presensi/' . $presensihariini->foto_in) }}', 'Foto Absen Masuk')">
+                                         onclick="showImageModal('{{ Storage::url('uploads/presensi/' . $presensihariini->foto_in) }}', 'Foto Absen Masuk')">
                                 @else
                                     -
                                 @endif
@@ -69,11 +69,11 @@
                             <td>{{ $presensihariini->jam_out ?? '-' }}</td>
                             <td>
                                 @if($presensihariini->foto_out)
-                                    <img src="{{ asset('storage/uploads/presensi/' . $presensihariini->foto_out) }}"
+                                    <img src="{{ Storage::url('uploads/presensi/' . $presensihariini->foto_out) }}"
                                          alt="Foto Keluar"
                                          class="img-thumbnail"
                                          style="width: 80px; height: 60px; object-fit: cover; cursor: pointer;"
-                                         onclick="showImageModal('{{ asset('storage/uploads/presensi/' . $presensihariini->foto_out) }}', 'Foto Absen Keluar')">
+                                         onclick="showImageModal('{{ Storage::url('uploads/presensi/' . $presensihariini->foto_out) }}', 'Foto Absen Keluar')">
                                 @else
                                     -
                                 @endif
@@ -171,20 +171,20 @@ cameraInput.addEventListener('change', () => {
         }
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
-                kirimPresensi(base64Image, pos.coords.latitude, pos.coords.longitude, catat_harian);
-            }, () => kirimPresensi(base64Image, '', '', catat_harian));
+                kirimPresensi(base64Image, pos.coords.latitude, pos.coords.longitude, catat_harian, isPulang ? 'out' : 'in');
+            }, () => kirimPresensi(base64Image, '', '', catat_harian, isPulang ? 'out' : 'in'));
         } else {
-            kirimPresensi(base64Image, '', '', catat_harian);
+            kirimPresensi(base64Image, '', '', catat_harian, isPulang ? 'out' : 'in');
         }
     };
     reader.readAsDataURL(file);
 });
 
-function kirimPresensi(image, lat, long, catat_harian) {
+function kirimPresensi(image, lat, long, catat_harian, type) {
     fetch("{{ route('mahasiswa.storepresensi') }}", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
-        body: JSON.stringify({ image: image, lokasi: lat && long ? lat+','+long : '', catat_harian: catat_harian })
+        body: JSON.stringify({ image: image, lokasi: lat && long ? lat+','+long : '', catat_harian: catat_harian, type: type })
     })
     .then(res => res.json())
     .then(res => {

@@ -1,7 +1,7 @@
 @foreach ($presensi as $d)
     @php
-        $foto_in = Storage::url('uploads/' . $d->foto_in);
-        $foto_out = Storage::url('uploads/' . $d->foto_out);
+        $foto_in = Storage::url('uploads/presensi/' . $d->foto_in);
+        $foto_out = Storage::url('uploads/presensi/' . $d->foto_out);
     @endphp
     <tr>
         <td>{{ $loop->iteration }}</td>

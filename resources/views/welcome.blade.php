@@ -58,7 +58,7 @@
                 </div>
 
                 <div>
-                    <h1 class="text-xl font-bold">ABSENSI V2 PKL/MAGANG</h1>
+                    <h1 class="text-xl font-bold">ABSENSI PKL/MAGANG</h1>
                     <p class="text-xs text-slate-600">Universitas Teknokrat Indonesia</p>
                 </div>
             </div>

@@ -78,6 +78,7 @@
                     <thead class="bg-light text-center">
                         <tr>
                             <th>#</th>
+                            <th>Foto Profile</th>
                             <th>NPM</th>
                             <th>Nama</th>
                             <th>Tanggal Presensi</th>
@@ -91,6 +92,15 @@
                         @forelse($mahasiswa as $index => $mhs)
                             <tr class="text-center align-middle">
                                 <td>{{ ($mahasiswa->currentPage() - 1) * $mahasiswa->perPage() + $index + 1 }}</td>
+                                <td>
+                                    @if($mhs->foto)
+                                        <img src="{{ asset('assets/img/' . $mhs->foto) }}"
+                                             alt="Foto Profile" class="rounded-circle shadow-sm" width="50" height="50" style="object-fit: cover;">
+                                    @else
+                                        <img src="{{ asset('assets/img/nopoto.png') }}"
+                                             alt="Foto Profile" class="rounded-circle shadow-sm" width="50" height="50" style="object-fit: cover;">
+                                    @endif
+                                </td>
                                 <td>{{ $mhs->npm }}</td>
                                 <td>{{ $mhs->nama_mhs }}</td>
                                 <td>{{ $mhs->tgl_presensi ?? '-' }}</td>
@@ -131,7 +141,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-3">Tidak ada data mahasiswa ditemukan.</td>
+                                <td colspan="9" class="text-center text-muted py-3">Tidak ada data mahasiswa ditemukan.</td>
                             </tr>
                         @endforelse
                     </tbody>

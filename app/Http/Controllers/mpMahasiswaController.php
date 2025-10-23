@@ -33,6 +33,7 @@ class mpMahasiswaController extends Controller
             ->select(
                 'mahasiswa.npm',
                 'mahasiswa.nama_mhs',
+                'mahasiswa.foto',
                 'presensi_in.tgl_presensi as tgl_presensi',
                 'presensi_in.lokasi_in as posisi_masuk',
                 'presensi_out.lokasi_out as posisi_pulang',

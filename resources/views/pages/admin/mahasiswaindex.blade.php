@@ -106,7 +106,7 @@
                                 <tr class="text-center align-middle">
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
-                                        <img src="{{ $d->foto ? Storage::url('uploads/mahasiswa/' . $d->foto) : asset('assets/img/nopoto.png') }}"
+                                        <img src="{{ $d->foto ? asset('assets/img/' . $d->foto) : asset('assets/img/nopoto.png') }}"
                                             class="avatar avatar-sm rounded-circle border" alt="Foto Mahasiswa">
                                     </td>
                                     <td class="fw-semibold">{{ $d->npm }}</td>

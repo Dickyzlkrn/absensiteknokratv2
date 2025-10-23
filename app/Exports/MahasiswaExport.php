@@ -21,7 +21,8 @@ class MahasiswaExport implements FromCollection, WithHeadings
             'Nama Mahasiswa',
             'Program Studi',
             'No HP',
-            'Tempat PKL'
+            'Tempat PKL',
+            'Kategori'
         ];
     }
 }

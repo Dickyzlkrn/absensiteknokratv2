@@ -71,6 +71,7 @@ class MahasiswaController extends Controller
     {
         $nama_mhs = $request->nama_mhs;
         $prodi = $request->prodi;
+        $kategori = $request->kategori;
 
         $mahasiswa = DB::table('mahasiswa')
             ->when($nama_mhs, function ($query) use ($nama_mhs) {
@@ -78,6 +79,9 @@ class MahasiswaController extends Controller
             })
             ->when($prodi, function ($query) use ($prodi) {
                 return $query->where('prodi', $prodi);
+            })
+            ->when($kategori, function ($query) use ($kategori) {
+                return $query->where('kategori', $kategori);
             })
             ->paginate(10);
 
@@ -97,6 +101,7 @@ class MahasiswaController extends Controller
             'prodi' => 'required',
             'nohp_mhs' => 'required',
             'tempat_pkl' => 'nullable',
+            'kategori' => 'required|in:PKL,Magang',
             'password' => 'nullable|min:6',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
@@ -107,6 +112,7 @@ class MahasiswaController extends Controller
             'prodi' => $request->prodi,
             'nohp_mhs' => $request->nohp_mhs,
             'tempat_pkl' => $request->tempat_pkl,
+            'kategori' => $request->kategori,
             'password' => Hash::make($request->password ?: 'password123'),
         ];
 
@@ -132,6 +138,7 @@ class MahasiswaController extends Controller
             'prodi' => 'required',
             'nohp_mhs' => 'required',
             'tempat_pkl' => 'nullable',
+            'kategori' => 'required|in:PKL,Magang',
             'password' => 'nullable|min:6',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
@@ -141,6 +148,7 @@ class MahasiswaController extends Controller
             'prodi' => $request->prodi,
             'nohp_mhs' => $request->nohp_mhs,
             'tempat_pkl' => $request->tempat_pkl,
+            'kategori' => $request->kategori,
         ];
 
         if ($request->password) {

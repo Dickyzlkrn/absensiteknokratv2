@@ -16,12 +16,16 @@ class MahasiswaImport implements ToModel, WithHeadingRow, WithValidation
         // Normalisasi nama prodi untuk menangani variasi penulisan
         $prodiNormalized = $this->normalizeProdi($row['program_studi'] ?? $row['prodi'] ?? '');
 
+        // Normalisasi kategori (PKL/Magang)
+        $kategoriNormalized = $this->normalizeKategori($row['kategori'] ?? '');
+
         return new Mahasiswa([
-            'npm' => $row['npm'],
+            'npm' => trim($row['npm']),
             'nama_mhs' => $row['nama_mahasiswa'] ?? $row['nama_mhs'],
             'prodi' => $prodiNormalized,
-            'nohp_mhs' => $row['no_hp'] ?? $row['nohp_mhs'],
+            'nohp_mhs' => $this->cleanPhoneNumber($row['no_hp'] ?? $row['nohp_mhs']),
             'tempat_pkl' => $row['tempat_pkl'] ?? null,
+            'kategori' => $kategoriNormalized,
             'password' => Hash::make('password123'), // Default password
         ]);
     }
@@ -109,5 +113,41 @@ class MahasiswaImport implements ToModel, WithHeadingRow, WithValidation
         ];
 
         return $mappings[$prodi] ?? ucwords($prodi);
+    }
+
+    private function normalizeKategori($kategori)
+    {
+        if (!$kategori) return 'PKL'; // Default to PKL if empty
+
+        $kategori = trim(strtolower($kategori));
+
+        // Mapping variasi penulisan kategori
+        $mappings = [
+            'pkl' => 'PKL',
+            'praktik kerja lapangan' => 'PKL',
+            'kerja praktik' => 'PKL',
+            'magang' => 'Magang',
+            'internship' => 'Magang',
+            'kerja magang' => 'Magang',
+        ];
+
+        return $mappings[$kategori] ?? 'PKL'; // Default to PKL if not recognized
+    }
+
+    private function cleanPhoneNumber($phone)
+    {
+        if (!$phone) return '';
+
+        // Remove dashes, spaces, and other non-numeric characters except +
+        $phone = preg_replace('/[^\d+]/', '', $phone);
+
+        // Remove leading + if present (assuming Indonesian numbers)
+        if (str_starts_with($phone, '+62')) {
+            $phone = '0' . substr($phone, 3);
+        } elseif (str_starts_with($phone, '62')) {
+            $phone = '0' . substr($phone, 2);
+        }
+
+        return $phone;
     }
 }

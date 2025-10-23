@@ -16,7 +16,7 @@
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-body pb-2">
                 <form class="row g-2 align-items-end" method="GET" action="{{ route('admin.mahasiswa.index') }}">
-                    <div class="col-md-5">
+                    <div class="col-md-3">
                         <label class="form-label">Cari Nama Mahasiswa</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="material-symbols-rounded">search</i></span>
@@ -25,7 +25,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Pilih Program Studi</label>
                         <select class="form-select" name="prodi">
                             <option value="">-- Semua Prodi --</option>
@@ -33,6 +33,15 @@
                                 <option value="{{ $p }}" {{ request('prodi') == $p ? 'selected' : '' }}>
                                     {{ $p }}</option>
                             @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Pilih Kategori</label>
+                        <select class="form-select" name="kategori">
+                            <option value="">-- Semua Kategori --</option>
+                            <option value="PKL" {{ request('kategori') == 'PKL' ? 'selected' : '' }}>PKL</option>
+                            <option value="Magang" {{ request('kategori') == 'Magang' ? 'selected' : '' }}>Magang</option>
                         </select>
                     </div>
 
@@ -86,6 +95,7 @@
                                 <th>NPM</th>
                                 <th>Nama</th>
                                 <th>Prodi</th>
+                                <th>Kategori</th>
                                 <th>No HP</th>
                                 <th>Tempat PKL</th>
                                 <th>Aksi</th>
@@ -102,6 +112,7 @@
                                     <td class="fw-semibold">{{ $d->npm }}</td>
                                     <td>{{ $d->nama_mhs }}</td>
                                     <td>{{ $d->prodi }}</td>
+                                    <td>{{ $d->kategori }}</td>
                                     <td>
                                         @php
                                             $nohp = $d->nohp_mhs;
@@ -114,7 +125,7 @@
                                         <div class="btn-group" role="group">
                                             <button type="button" class="btn btn-sm btn-warning edit"
                                                 data-npm="{{ $d->npm }}" data-nama="{{ $d->nama_mhs }}"
-                                                data-prodi="{{ $d->prodi }}" data-nohp="{{ $d->nohp_mhs }}"
+                                                data-prodi="{{ $d->prodi }}" data-kategori="{{ $d->kategori }}" data-nohp="{{ $d->nohp_mhs }}"
                                                 data-tempat="{{ $d->tempat_pkl }}" data-foto="{{ $d->foto ?? '' }}">
                                                 <i class="material-symbols-rounded">edit</i>
                                             </button>
@@ -131,7 +142,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-3">Belum ada data mahasiswa.</td>
+                                    <td colspan="9" class="text-center text-muted py-3">Belum ada data mahasiswa.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -186,6 +197,15 @@
                                         @foreach ($prodi as $p)
                                             <option value="{{ $p }}">{{ $p }}</option>
                                         @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Kategori <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="kategori" id="kategori_input" required>
+                                        <option value="">-- Pilih Kategori --</option>
+                                        <option value="PKL">PKL</option>
+                                        <option value="Magang">Magang</option>
                                     </select>
                                 </div>
 
@@ -358,6 +378,7 @@
                 document.getElementById('npm').value = this.dataset.npm;
                 document.getElementById('nama_mhs').value = this.dataset.nama;
                 document.getElementById('prodi_input').value = this.dataset.prodi;
+                document.getElementById('kategori_input').value = this.dataset.kategori;
                 document.getElementById('nohp_mhs').value = this.dataset.nohp;
                 document.getElementById('tempat_pkl').value = this.dataset.tempat;
                 document.getElementById('modalMahasiswaLabel').innerHTML =

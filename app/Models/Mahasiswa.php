@@ -21,7 +21,8 @@ class Mahasiswa extends Authenticatable
         'prodi',
         'password',
         'foto',
-        'tempat_pkl'
+        'tempat_pkl',
+        'kategori'
 
     ];
 

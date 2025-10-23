@@ -15,7 +15,8 @@ return new class extends Migration
             $table->string('npm', 20)->change();
             $table->string('nama_mhs', 255)->change();
             $table->string('prodi', 255)->change();
-            $table->string('nohp_mhs', 50)->change();
+            $table->string('nohp_mhs', 100)->nullable()->change();
+
             $table->text('foto')->nullable()->change();
             $table->string('password')->nullable()->change();
             $table->string('tempat_pkl')->nullable()->change();

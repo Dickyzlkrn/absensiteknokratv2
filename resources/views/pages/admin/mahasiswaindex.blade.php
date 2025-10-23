@@ -50,19 +50,24 @@
                     </div>
                 </form>
 
-                {{-- Import Excel --}}
-                <form class="mt-3" action="{{ route('admin.mahasiswa.import') }}" method="POST"
-                    enctype="multipart/form-data">
-                    @csrf
-                    <input type="file" name="file" id="file" class="d-none" accept=".xlsx, .xls" required>
-                    <button type="button" class="btn bg-gradient-primary"
-                        onclick="document.getElementById('file').click()">
-                        <i class="material-symbols-rounded me-1">upload_file</i> Import Excel
+                {{-- Import Excel & Download Format --}}
+                <div class="mt-3 d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success btn-sm" id="downloadFormatBtn">
+                        <i class="material-symbols-rounded me-1">download</i> Unduh Format Import
                     </button>
-                    <small class="text-danger d-block mt-2">
-                        *Gunakan format Excel (XLS/XLSX) sesuai template kolom mahasiswa
-                    </small>
-                </form>
+
+                    <form action="{{ route('admin.mahasiswa.import') }}" method="POST"
+                        enctype="multipart/form-data" class="d-inline" id="importForm">
+                        @csrf
+                        <input type="file" name="file" id="file" class="d-none" accept=".xlsx, .xls" required>
+                        <button type="button" class="btn bg-gradient-primary btn-sm" id="importBtn">
+                            <i class="material-symbols-rounded me-1">upload_file</i> Import Excel
+                        </button>
+                    </form>
+                </div>
+                <small class="text-danger d-block mt-2">
+                    *Gunakan format Excel (XLS/XLSX) sesuai template. Sistem akan menyesuaikan variasi penulisan program studi.
+                </small>
             </div>
         </div>
 
@@ -291,6 +296,9 @@
         const fotoInput = document.getElementById('foto');
         const previewFoto = document.getElementById('previewFoto');
         const btnRemovePhoto = document.getElementById('btnRemovePhoto');
+        const importBtn = document.getElementById('importBtn');
+        const importForm = document.getElementById('importForm');
+        const fileInput = document.getElementById('file');
 
         // Preview foto
         fotoInput.addEventListener('change', (e) => {
@@ -310,6 +318,23 @@
             previewFoto.src = "{{ asset('assets/img/nopoto.png') }}";
             fotoInput.value = '';
             btnRemovePhoto.classList.add('d-none');
+        });
+
+        // Download format button
+        document.getElementById('downloadFormatBtn').addEventListener('click', () => {
+            window.location.href = "{{ route('admin.mahasiswa.export.format') }}";
+        });
+
+        // Import Excel: click file input when button is clicked
+        importBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Submit form when file is selected
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                importForm.submit();
+            }
         });
 
         // Reset form saat tambah baru

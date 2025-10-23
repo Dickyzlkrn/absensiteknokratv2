@@ -97,6 +97,7 @@ Route::prefix('admin')->middleware('auth:web')->group(function () {
     Route::put('/mahasiswa/{npm}', [MahasiswaController::class, 'update'])->name('admin.mahasiswa.update');
     Route::delete('/mahasiswa/{npm}', [MahasiswaController::class, 'destroy'])->name('admin.mahasiswa.destroy');
     Route::post('/mahasiswa/import', [MahasiswaController::class, 'importExcel'])->name('admin.mahasiswa.import');
+    Route::get('/mahasiswa/export-format', [MahasiswaController::class, 'exportFormat'])->name('admin.mahasiswa.export.format');
 
     // Presensi
     Route::get('/presensi/laporan', [PresensiController::class, 'laporan'])->name('admin.presensi.laporan');

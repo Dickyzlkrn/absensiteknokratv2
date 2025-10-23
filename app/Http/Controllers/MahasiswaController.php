@@ -177,6 +177,14 @@ class MahasiswaController extends Controller
     }
 
     /**
+     * Export Format Excel Mahasiswa
+     */
+    public function exportFormat(Request $request)
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MahasiswaExport, 'format_import_mahasiswa.xlsx');
+    }
+
+    /**
      * Import Excel Mahasiswa
      */
     public function importExcel(Request $request)
@@ -185,9 +193,21 @@ class MahasiswaController extends Controller
             'file' => 'required|mimes:xlsx,xls'
         ]);
 
-        // Implementasi import Excel di sini jika diperlukan
-        // Menggunakan Laravel Excel atau library lainnya
+        try {
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\MahasiswaImport, $request->file('file'));
 
-        return redirect()->back()->with('success', 'Import berhasil!');
+            return redirect()->back()->with('success', 'Import data mahasiswa berhasil! Semua data telah dimasukkan ke database.');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+
+            $errors = [];
+            foreach ($failures as $failure) {
+                $errors[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+
+            return redirect()->back()->withErrors($errors);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['Import gagal: ' . $e->getMessage()]);
+        }
     }
 }

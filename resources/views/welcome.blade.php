@@ -77,7 +77,7 @@
                 Sistem Presensi UTI untuk PKL & Magang
             </span>
             <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mt-8 leading-tight">
-                Kelola Presensi PKL <br>
+                Kelola Presensi PKL/Magang <br>
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#e30613] to-[#b0040f]">
                     Lebih Mudah & Efisien
                 </span>

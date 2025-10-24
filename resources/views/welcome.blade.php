@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ABSENSI PKL/MAGANG - Universitas Teknokrat Indonesia</title>
+    <title>SIPERMATA - Universitas Teknokrat Indonesia</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
@@ -61,7 +61,7 @@
                 </div>
 
                 <div>
-                    <h1 class="text-xl font-bold">ABSENSI PKL/MAGANG</h1>
+                    <h1 class="text-xl font-bold">SIPERMATA</h1>
                     <p class="text-xs text-slate-600">Universitas Teknokrat Indonesia</p>
                 </div>
             </div>

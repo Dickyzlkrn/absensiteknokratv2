@@ -5,7 +5,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand px-4 py-3 m-0" href="{{ route('admin.dashboard') }}">
             <img src="{{ asset('assets/img/logo.png') }}" class="navbar-brand-img" width="26" height="26" alt="main_logo">
-            <span class="ms-1 text-sm text-dark fw-bold">Website Absensi V2</span><br>
+            <span class="ms-1 text-sm text-dark fw-bold">SIPERMATA</span><br>
             <span class="ms-1 text-xs text-muted">Universitas Teknokrat Indonesia</span>
         </a>
     </div>

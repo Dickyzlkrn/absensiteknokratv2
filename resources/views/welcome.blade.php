@@ -95,9 +95,7 @@
                 <button onclick="studentLogin()" class="bg-[#e30613] hover:bg-[#b0040f] text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-transform hover:scale-105 flex items-center">
                     <i data-lucide="user-check" class="w-5 h-5 mr-2"></i> Login Mahasiswa
                 </button>
-                <button onclick="adminLogin()" class="border-2 border-slate-300 hover:border-[#e30613] text-slate-700 hover:text-[#e30613] px-8 py-4 text-lg font-semibold rounded-xl transition-transform hover:scale-105 flex items-center">
-                    <i data-lucide="shield" class="w-5 h-5 mr-2"></i> Login Admin
-                </button>
+                
             </div>
 
             <!-- STATS -->

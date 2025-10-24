@@ -218,4 +218,45 @@ class MahasiswaController extends Controller
             return redirect()->back()->withErrors(['Import gagal: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Store Pengajuan Izin
+     */
+    public function storeIzin(Request $request)
+    {
+        $request->validate([
+            'tgl_izin' => 'required|date|after_or_equal:today',
+            'status' => 'required|in:i,s',
+            'deskripsi_izin' => 'required|string|max:500'
+        ]);
+
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        // Cek apakah sudah ada pengajuan izin untuk tanggal tersebut
+        $existingIzin = DB::table('pengajuan_izin')
+            ->where('npm', $mahasiswa->npm)
+            ->where('tgl_izin', $request->tgl_izin)
+            ->first();
+
+        if ($existingIzin) {
+            return redirect()->route('mahasiswa.izin')->with('error', 'Anda sudah mengajukan izin untuk tanggal tersebut.');
+        }
+
+        $insert = DB::table('pengajuan_izin')->insert([
+            'npm' => $mahasiswa->npm,
+            'tgl_izin' => $request->tgl_izin,
+            'status' => $request->status,
+            'lampiran' => '',
+            'deskripsi_izin' => $request->deskripsi_izin,
+            'status_approved' => '0', // 0 = pending, 1 = approved, 2 = rejected
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        if ($insert) {
+            return redirect()->route('mahasiswa.izin')->with('success', 'Pengajuan izin berhasil dikirim dan menunggu persetujuan.');
+        } else {
+            return redirect()->route('mahasiswa.izin')->with('error', 'Gagal mengirim pengajuan izin.');
+        }
+    }
 }

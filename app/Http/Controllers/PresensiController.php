@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
-use Redirect;
+use Illuminate\Support\Facades\Redirect;
 use App\Exports\PresensiExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PresensiController extends Controller
 {
@@ -19,6 +20,24 @@ class PresensiController extends Controller
     {
         $mahasiswa = Auth::guard('mahasiswa')->user();
         $today = Carbon::now()->toDateString();
+
+        // Cek apakah ada izin yang diajukan untuk hari ini
+        $izinHariIni = DB::table('pengajuan_izin')
+            ->where('npm', $mahasiswa->npm)
+            ->where('tgl_izin', $today)
+            ->first();
+
+        // Jika ada izin yang diajukan dan belum ada presensi, buat otomatis
+        if ($izinHariIni && !DB::table('presensi')->where('npm', $mahasiswa->npm)->where('tgl_presensi', $today)->exists()) {
+            DB::table('presensi')->insert([
+                'npm' => $mahasiswa->npm,
+                'tgl_presensi' => $today,
+                'jam_in' => '00:00:00', // Default untuk izin
+                'foto_in' => 'izin_auto.png', // Placeholder
+                'lokasi_in' => 'Izin: ' . $izinHariIni->deskripsi_izin,
+                'catat_harian' => 'Izin: ' . ($izinHariIni->status == 's' ? 'Sakit' : 'Izin') . ' - ' . $izinHariIni->deskripsi_izin
+            ]);
+        }
 
         // Ambil presensi hari ini
         $presensihariini = DB::table('presensi')
@@ -48,7 +67,13 @@ class PresensiController extends Controller
 
         $rekapizin->hadir = $hadir;
 
-        return view('pages.mahasiswa.presensi', compact('presensihariini', 'rekapizin'));
+        // Ambil data izin mahasiswa
+        $dataizin = DB::table('pengajuan_izin')
+            ->where('npm', $mahasiswa->npm)
+            ->orderBy('tgl_izin', 'desc')
+            ->get();
+
+        return view('pages.mahasiswa.presensi', compact('presensihariini', 'rekapizin', 'dataizin'));
     }
 
     // ===================== STORE (ABSEN) =====================
@@ -238,17 +263,47 @@ class PresensiController extends Controller
     {
         $npm = Auth::guard('mahasiswa')->user()->npm;
 
+        $request->validate([
+            'tgl_izin' => 'required|date|after_or_equal:today',
+            'status' => 'required|in:i,s',
+            'deskripsi_izin' => 'required|string|max:500'
+        ]);
+
+        // Cek apakah sudah ada pengajuan izin untuk tanggal tersebut
+        $existingIzin = DB::table('pengajuan_izin')
+            ->where('npm', $npm)
+            ->where('tgl_izin', $request->tgl_izin)
+            ->first();
+
+        if ($existingIzin) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Anda sudah mengajukan izin untuk tanggal tersebut.']);
+            }
+            return redirect()->route('mahasiswa.presensi')->with('error', 'Anda sudah mengajukan izin untuk tanggal tersebut.');
+        }
+
         $insert = DB::table('pengajuan_izin')->insert([
-            'id' => mt_rand(1, 999999999),
             'npm' => $npm,
             'tgl_izin' => $request->tgl_izin,
             'status' => $request->status,
-            'lampiran' => $request->lampiran
+            'lampiran' => '',
+            'deskripsi_izin' => $request->deskripsi_izin,
+            'status_approved' => '0', // 0 = pending, 1 = approved, 2 = rejected
+            'created_at' => now(),
+            'updated_at' => now()
         ]);
 
-        return $insert
-            ? redirect()->route('mahasiswa.izin')->with('success', 'Data berhasil disimpan')
-            : redirect()->route('mahasiswa.izin')->with('error', 'Data gagal disimpan');
+        if ($insert) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Pengajuan izin berhasil dikirim dan menunggu persetujuan.']);
+            }
+            return redirect()->route('mahasiswa.presensi')->with('success', 'Pengajuan izin berhasil dikirim dan menunggu persetujuan.');
+        } else {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal mengirim pengajuan izin.']);
+            }
+            return redirect()->route('mahasiswa.presensi')->with('error', 'Gagal mengirim pengajuan izin.');
+        }
     }
 
     // ===================== MONITORING =====================
@@ -317,8 +372,28 @@ class PresensiController extends Controller
 
         // Handle print
         if ($request->has('print')) {
-            $presensi = $query->get();
-            return view('pages.mahasiswa.rekap_print', compact('presensi', 'namabulan', 'request'));
+            $mahasiswa = Auth::guard('mahasiswa')->user();
+            $bulan = $request->bulan ?? date('m');
+            $tahun = $request->tahun ?? date('Y');
+
+            // Prepare data for cetakrekap template
+            $rekap = collect([]);
+            $studentData = [
+                'npm' => $mahasiswa->npm,
+                'nama_mhs' => $mahasiswa->nama_mhs,
+            ];
+
+            $totalDays = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+            for ($i = 1; $i <= $totalDays; $i++) {
+                $date = sprintf('%04d-%02d-%02d', $tahun, $bulan, $i);
+                $presensi = DB::table('presensi')->where('npm', $mahasiswa->npm)->where('tgl_presensi', $date)->first();
+                $studentData['tgl_' . $i] = $presensi ? ($presensi->jam_in ? date('H:i', strtotime($presensi->jam_in)) : 'H') : '-';
+            }
+
+            $rekap->push((object)$studentData);
+
+            $pdf = Pdf::loadView('pages.mahasiswa.cetakrekap', compact('rekap', 'namabulan', 'bulan', 'tahun'));
+            return $pdf->download('rekap_presensi_' . $mahasiswa->npm . '.pdf');
         }
 
         // Pagination untuk tampilan normal

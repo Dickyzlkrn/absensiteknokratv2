@@ -49,7 +49,17 @@
     .tabelpresensi tr td {
       border: 1px solid #131212;
       padding: 5px;
-      font-size: ;
+      font-size: 12px;
+    }
+
+    .status-hadir {
+      color: green;
+      font-weight: bold;
+    }
+
+    .status-tidak-lengkap {
+      color: orange;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -66,7 +76,7 @@
     <table style="width: 100%">
       <tr>
         <td>
-          <img src="{{ asset('assets/img/logouti.png') }}" width="70" height="70" alt="">
+          <img src="{{ asset('assets/img/logo.png') }}" width="70" height="70" alt="">
         </td>
         <td style="">
           <span id="title" text-align: center;>
@@ -79,7 +89,7 @@
       </tr>
     </table>
     <table class="tabeldatamahasiswa">
-      
+
       <tr>
         <td>Nama Mahasiswa</td>
         <td>:</td>
@@ -110,6 +120,7 @@
         <th>Jam Pulang</th>
         <!-- <th>Foto</th> -->
         <th>Catatan Harian</th>
+        <th>Status</th>
         <!-- <th>Keterangan</th> -->
       </tr>
       @foreach ($presensi as $d)
@@ -119,7 +130,13 @@
       <td>{{ $d->jam_in }}</td>
       <td>{{ $d->jam_out }}</td>
       <td>{{ $d->catat_harian }}</td>
-
+      <td>
+        @if($d->jam_in && $d->jam_out)
+          <span class="status-hadir">Hadir</span>
+        @else
+          <span class="status-tidak-lengkap">Tidak Lengkap</span>
+        @endif
+      </td>
       </tr>
     @endforeach
     </table>

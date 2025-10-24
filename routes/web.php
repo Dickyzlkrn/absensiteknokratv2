@@ -60,7 +60,8 @@ Route::prefix('mahasiswa')->middleware('auth:mahasiswa')->group(function () {
     Route::post('/cetaklaporan', [PresensiController::class, 'cetaklaporan'])->name('mahasiswa.cetaklaporan');
 
     // Izin Mahasiswa ✅
-    Route::view('/izin', 'pages.mahasiswa.izin')->name('mahasiswa.izin');
+    Route::get('/izin', [PresensiController::class, 'izin'])->name('mahasiswa.izin');
+    Route::get('/buatizin', [PresensiController::class, 'buatizin'])->name('mahasiswa.buatizin');
 
     // Histori Izin ✅
     Route::view('/histori', 'pages.mahasiswa.histori')->name('mahasiswa.histori');
@@ -81,6 +82,10 @@ Route::prefix('mahasiswa')->middleware('auth:mahasiswa')->group(function () {
     // Route untuk Presensi Cepat AJAX
     Route::post('/mahasiswa/presensi/store', [\App\Http\Controllers\PresensiController::class, 'store'])
         ->name('mahasiswa.storepresensi');
+
+    // Route untuk Pengajuan Izin AJAX
+    Route::post('/izin/store', [MahasiswaController::class, 'storeIzin'])
+        ->name('mahasiswa.storeizin');
 });
 
 // ===================================================

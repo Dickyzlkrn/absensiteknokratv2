@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Admin | SIPERMATA</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -101,7 +104,7 @@
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             /* Transisi pada border dan background */
-            transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease; 
+            transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
             background-color: var(--bg-light);
             color: var(--text-dark);
         }
@@ -122,9 +125,9 @@
             font-size: 1.0rem;
             pointer-events: none;
             /* Transisi untuk warna ikon */
-            transition: color 0.3s ease; 
+            transition: color 0.3s ease;
         }
-        
+
         /* Ubah warna ikon saat input fokus */
         .input-wrapper:focus-within .input-icon {
             color: var(--primary-color);
@@ -143,7 +146,7 @@
             font-size: 1.2rem;
             color: var(--text-muted);
             /* Transisi saat hover */
-            transition: color 0.2s ease; 
+            transition: color 0.2s ease;
         }
 
         .show-password:hover {
@@ -160,7 +163,7 @@
             border-radius: 10px;
             cursor: pointer;
             /* Transisi untuk warna dan transform */
-            transition: background-color 0.3s ease, transform 0.15s ease; 
+            transition: background-color 0.3s ease, transform 0.15s ease;
             margin-top: 10px;
             letter-spacing: 0.5px;
         }
@@ -173,7 +176,7 @@
 
         .btn-primary:active {
             /* Efek tekan yang lebih jelas dan smooth */
-            transform: scale(0.98); 
+            transform: scale(0.98);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
@@ -230,9 +233,9 @@
 
     <script>
         function togglePassword() {
-            const passwordInput = document.getElementById("password-input"); 
+            const passwordInput = document.getElementById("password-input");
             const icon = document.querySelector(".show-password");
-            
+
             if (passwordInput.type === "password") {
                 passwordInput.type = "text";
                 icon.classList.remove("fa-eye");

@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>@yield('title', 'ABSENSI V2')</title>
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
+
   <!-- Fonts and Icons -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
   <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
@@ -29,7 +32,7 @@
       @yield('content')
     </div>
 
-    
+
 
   <!-- Core JS Files -->
   <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>

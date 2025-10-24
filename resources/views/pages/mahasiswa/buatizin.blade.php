@@ -2,99 +2,113 @@
 
 @section('content')
 @include('layouts.sidebarmhs')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+
+<div class="ms-3 mb-4">
+    <h3 class="mb-0 h4 font-weight-bolder">Form Pengajuan Izin</h3>
+    <p class="text-muted mb-4">
+        Ajukan izin dengan lengkap dan jelas.
+    </p>
+</div>
+
+{{-- Display success/error messages --}}
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Form Izin</h6>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('mahasiswa.storeizin') }}" method="POST" id="izinForm">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="tgl_izin" class="form-label">Tanggal Izin</label>
+                        <input type="date" class="form-control" id="tgl_izin" name="tgl_izin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Jenis Izin</label>
+                        <select class="form-control" id="status" name="status" required>
+                            <option value="">Pilih Jenis Izin</option>
+                            <option value="i">Izin</option>
+                            <option value="s">Sakit</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="deskripsi_izin" class="form-label">Deskripsi Izin</label>
+                        <textarea class="form-control" id="deskripsi_izin" name="deskripsi_izin" rows="4" placeholder="Jelaskan alasan izin secara detail..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ route('mahasiswa.izin') }}" class="btn btn-secondary">Kembali</a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            Ajukan Izin
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Style tambahan --}}
 <style>
-    .datepicker-modal {
-        max-height: 430px !important;
-    }
-
-    .datepicker-date-display {
-        background-color: #800000 !important;
-    }
+.notification {
+    animation: slideIn 0.3s ease forwards, slideOut 0.3s ease 4.7s forwards;
+}
+@keyframes slideIn {
+    from {opacity:0; transform: translateX(100%);}
+    to {opacity:1; transform: translateX(0);}
+}
+@keyframes slideOut {
+    from {opacity:1; transform: translateX(0);}
+    to {opacity:0; transform: translateX(100%);}
+}
 </style>
-<!-- App Header -->
-<div class="appHeader bg-primary text-light">
-    <div class="left">
-        <a href="javascript:;" class="headerButton goBack">
-            <ion-icon name="chevron-back-outline"></ion-icon>
-        </a>
-    </div>
-    <div class="pageTitle">Form Izin</div>
-    <div class="right"></div>
-</div>
-<!-- App Header -->
+
+{{-- Script untuk immediate redirect setelah success --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a success message
+    const successAlert = document.querySelector('.alert-success');
+    if (successAlert) {
+        // Immediate redirect to presensi page
+        window.location.href = '{{ route("mahasiswa.presensi") }}';
+    }
+});
+
+document.getElementById('izinForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const spinner = submitBtn.querySelector('.spinner-border');
+
+    // Show loading spinner
+    spinner.classList.remove('d-none');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mengirim...';
+});
+</script>
+
 @endsection
-
-@section('content')
-<div class="row" style="margin-top:70px">
-    <div class="col">
-        <form method="POST" action="/presensi/storeizin" id="frmIzin">
-            @csrf
-            <div class="form-group">
-                <input type="text" id+="tgl_izin" name="tgl_izin" class="form-control datepicker" placeholder="Tanggal">
-            </div>
-            <div class="form-group">
-                <select name="status" id="status" class="form-control">
-                    <option value="">Status</option>
-                    <option value="i">Izin</option>
-                    <option value="s">Sakit</option>
-                </select>
-            </div>
-            <!-- <div class="form-group">
-                <textarea name="keterangan" id="keterangan" cols="30" rows="5" class="form-control"
-                    placeholder="Keterangan"></textarea>
-            </div> -->
-            <div class="form-group">
-                <label for="lampiran" class="col-sm-3 col-form-label">Lampiran</label>
-                <input type="file" name="lampiran" id="lampiran" class="form-control">
-            </div>
-            <div class="form-group">
-                <button class="btn w-100" style="background-color: maroon; color: white; border: none;">Kirim</button>
-            </div>
-        </form>
-    </div>
-</div>
-@endsection
-
-<!-- DatePicker -->
-@push('myscript')
-    <script>
-        $(document).ready(function () {
-            $(".datepicker").datepicker({
-                defaultDate: new Date(2025, 0, 1), // Tanggal default di awal tahun 2024
-                minDate: new Date(2025, 0, 1),     // Tanggal minimum (awal 2024)
-                maxDate: new Date(2026, 11, 31),   // Tanggal maksimum (akhir 2026)
-                yearRange: [2024, 2026],           // Rentang tahun pada dropdown
-                format: "yyyy-mm-dd"               // Format tanggal
-            });
-
-            $("#frmIzin").submit(function () {
-                var tgl_izin = $("#tgl_izin").val();
-                var status = $("#status").val();
-                var lampiran = $("#lampiran").val();
-                if (tgl_izin == "") {
-                    Swal.fire({
-                        title: 'Oops !'
-                        , text: 'Tanggal Harus di Isi'
-                        , icon: 'warning'
-                    });
-                    return false;
-                } else if (status == "") {
-                    Swal.fire({
-                        title: 'Oops !'
-                        , text: 'Status Harus di Isi'
-                        , icon: 'warning'
-                    });
-                    return false;
-                } else if (keterangan == "") {
-                    Swal.fire({
-                        title: 'Oops !'
-                        , text: 'Keterangan Harus di Isi'
-                        , icon: 'warning'
-                    });
-                    return false;
-                }
-            });
-        });
-    </script>
-@endpush

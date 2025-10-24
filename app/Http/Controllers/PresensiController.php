@@ -373,26 +373,28 @@ class PresensiController extends Controller
         // Handle print
         if ($request->has('print')) {
             $mahasiswa = Auth::guard('mahasiswa')->user();
-            $bulan = $request->bulan ?? date('m');
-            $tahun = $request->tahun ?? date('Y');
+            $bulan = $request->bulan;
+            $tahun = $request->tahun;
+            $showAllData = false;
+            $dataPeriods = collect();
 
-            // Prepare data for cetakrekap template
-            $rekap = collect([]);
-            $studentData = [
-                'npm' => $mahasiswa->npm,
-                'nama_mhs' => $mahasiswa->nama_mhs,
-            ];
-
-            $totalDays = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
-            for ($i = 1; $i <= $totalDays; $i++) {
-                $date = sprintf('%04d-%02d-%02d', $tahun, $bulan, $i);
-                $presensi = DB::table('presensi')->where('npm', $mahasiswa->npm)->where('tgl_presensi', $date)->first();
-                $studentData['tgl_' . $i] = $presensi ? ($presensi->jam_in ? date('H:i', strtotime($presensi->jam_in)) : 'H') : '-';
+            if (!$bulan && !$tahun) {
+                $showAllData = true;
+                $dataPeriods = DB::table('presensi')
+                    ->where('npm', $mahasiswa->npm)
+                    ->selectRaw('YEAR(tgl_presensi) as tahun, MONTH(tgl_presensi) as bulan')
+                    ->distinct()
+                    ->orderBy('tahun')
+                    ->orderBy('bulan')
+                    ->get();
             }
 
-            $rekap->push((object)$studentData);
+            // Prepare data for cetakrekap template
+            $rekap = collect([
+                (object)['npm' => $mahasiswa->npm, 'nama_mhs' => $mahasiswa->nama_mhs]
+            ]);
 
-            $pdf = Pdf::loadView('pages.mahasiswa.cetakrekap', compact('rekap', 'namabulan', 'bulan', 'tahun'));
+            $pdf = Pdf::loadView('pages.mahasiswa.cetakrekap', compact('rekap', 'namabulan', 'bulan', 'tahun', 'showAllData', 'dataPeriods'));
             return $pdf->download('rekap_presensi_' . $mahasiswa->npm . '.pdf');
         }
 

@@ -21,8 +21,11 @@
                             <label for="bulan" class="form-label">Bulan</label>
                             <select name="bulan" id="bulan" class="form-select">
                                 <option value="">Semua Bulan</option>
+                                @php
+                                    $defaultBulan = request('bulan', '');
+                                @endphp
                                 @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ $i }}" {{ request('bulan') == $i ? 'selected' : '' }}>
+                                    <option value="{{ $i }}" {{ $defaultBulan == $i ? 'selected' : '' }}>
                                         {{ $namabulan[$i] }}
                                     </option>
                                 @endfor
@@ -35,9 +38,10 @@
                                 @php
                                     $tahunmulai = 2024;
                                     $tahunskrg = date("Y");
+                                    $defaultTahun = request('tahun', '');
                                 @endphp
                                 @for($tahun = $tahunmulai; $tahun <= $tahunskrg; $tahun++)
-                                    <option value="{{ $tahun }}" {{ request('tahun') == $tahun ? 'selected' : '' }}>
+                                    <option value="{{ $tahun }}" {{ $defaultTahun == $tahun ? 'selected' : '' }}>
                                         {{ $tahun }}
                                     </option>
                                 @endfor
